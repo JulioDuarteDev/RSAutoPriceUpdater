@@ -95,9 +95,9 @@ function showManualPrompt_() {
 	);
 }
 
-//Prompt displayed when updating a specific row
 function showAboutPrompt_() {
 	var newestVersionNumber = getNewestVersionNumber_();
+
 	var textVersion =
 		"Version " +
 		version_ +
@@ -106,19 +106,31 @@ function showAboutPrompt_() {
 			: " (A new version is available on GitHub, version " +
 			  newestVersionNumber +
 			  ")");
-	var textContact =
-		"This script was originally written by Zenyl (Reddit: /u/zenyl, RSN: Zenyl) and has since been updated by Tristonho (RSN: Tristonho, LinkedIn: https://www.linkedin.com/in/julioduartedev/). If you have any questions or feedback, feel free to reach out.";
+
+	var textCredits =
+		"This script was originally written by Zenyl (Reddit: /u/zenyl, RSN: Zenyl) and later modernized and expanded by Tristonho (RSN: Tristonho, LinkedIn: https://www.linkedin.com/in/julioduartedev/).";
+
+	var textData =
+		"Market data is sourced through the Weird Gloop RuneScape data project. Special thanks to Gaz (Gaz GEBot) and the contributors who maintain this resource for the RuneScape community.";
+
 	var textDisclaimer =
-		"Disclaimer: We are not affiliated with Jagex in any way. This script is developed for use with their public APIs.";
+		"Disclaimer: We are not affiliated with Jagex in any way. This project is an independent community tool built using publicly available RuneScape data.";
+
 	var textGithub =
-		"Github repository: https://github.com/JulioDuarteDev/RSAutoPriceUpdater";
-	var textLicense = "License: GNU General Public License 3.";
+		"GitHub repository: https://github.com/JulioDuarteDev/RSAutoPriceUpdater";
+
+	var textLicense =
+		"License: GNU General Public License v3.0";
+
 	var ui = SpreadsheetApp.getUi();
+
 	ui.alert(
 		"RuneScape Price Updater - About",
 		textVersion +
 			"\n\n" +
-			textContact +
+			textCredits +
+			"\n\n" +
+			textData +
 			"\n\n" +
 			textDisclaimer +
 			"\n\n" +
