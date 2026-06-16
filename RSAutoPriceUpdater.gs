@@ -1,6 +1,8 @@
 //The name of the sheet this script uses. If you need it to be called something else, change this variable to something else.
 var priceSheetName = "Prices";
 
+var dumpUrl = "https://chisel.weirdgloop.org/gazproj/gazbot/rs_dump.json";
+
 //Adds the menu to the spreadsheet
 function onOpen() {
 	SpreadsheetApp.getUi()
@@ -8,72 +10,18 @@ function onOpen() {
 		.addItem("Manual", "showManualPrompt_")
 		.addItem("Generate price sheet", "generatePriceUpdateSheet")
 		.addSeparator()
-		.addItem("Update price for row...", "showUpdateSpecificRowPrompt_")
-    .addItem("Update prices for range...", "showUpdateRangePrompt_")
+		.addItem("Update prices", "updateAllPrices_")
 		.addSeparator()
 		.addItem("About", "showAboutPrompt_")
 		.addToUi();
 }
 
-function showUpdateRangePrompt_() {
-	var ui = SpreadsheetApp.getUi();
-
-	var result = ui.prompt(
-		"Update prices",
-		"Enter the row range (example: 2-49)",
-		ui.ButtonSet.OK_CANCEL
-	);
-
-	if (result.getSelectedButton() !== ui.Button.OK) {
-		return;
-	}
-
-	var text = result.getResponseText().trim();
-
-	var match = text.match(/^(\d+)\s*-\s*(\d+)$/);
-
-	if (!match) {
-		ui.alert(
-			"Invalid range. Use the format start-end (example: 2-49)."
+function updateAllPrices_() {
+	var sheet =
+		SpreadsheetApp.getActiveSpreadsheet().getSheetByName(
+			priceSheetName
 		);
-		return;
-	}
-
-	var from = parseInt(match[1], 10);
-	var to = parseInt(match[2], 10);
-
-	if (from < 2 || to < from) {
-		ui.alert("Invalid range.");
-		return;
-	}
-
-	updatePricesForRange_(from, to);
-
-	ui.alert(
-		"Update complete",
-		`Rows ${from} to ${to} have been updated.`,
-		ui.ButtonSet.OK
-	);
-}
-
-//Display prompt displayed when updating a specific row
-function showUpdateSpecificRowPrompt_() {
-	var ui = SpreadsheetApp.getUi();
-	var result = ui.prompt(
-		"Update price for a specific row",
-		"Row",
-		ui.ButtonSet.OK_CANCEL
-	);
-	var button = result.getSelectedButton();
-	var text = result.getResponseText();
-
-	if (button == ui.Button.OK) {
-		if (isNumber_(text)) {
-			updatePricesForRange_(text, text);
-		} else {
-			ui.alert("'" + text + "' is not a valid number.");
-		}
-	}
+	updatePricesForRange_(2, sheet.getLastRow());
 }
 
 function showManualPrompt_() {
@@ -176,8 +124,11 @@ function generatePriceUpdateSheet() {
 		"Item ID",
 		"Item name",
 		"Price",
+    "Limit",
 		"Volume",
-		"Last succesful update",
+    "High Alch",
+    "Members only",
+		"Last GE update",
 		"Last attempted update",
 	];
 
@@ -188,7 +139,7 @@ function generatePriceUpdateSheet() {
 	//Format sheet and cells
 	sheet.deleteColumns(1, 25);
 
-	for (row = 1; row <= titles.length; row++) {
+	for (var row = 1; row <= titles.length; row++) {
 		sheet.getRange(1, row).setValue(titles[row - 1]);
 		sheet.getRange(1, row).setFontWeight("bold");
 		sheet.getRange(1, row).setHorizontalAlignment("center");
@@ -197,42 +148,29 @@ function generatePriceUpdateSheet() {
 	sheet.setFrozenRows(1);
 	sheet.setColumnWidth(1, 33);
 	sheet.setColumnWidth(3, 150);
-	sheet.autoResizeColumn(5);
-	sheet.autoResizeColumn(6);
-	sheet.deleteRows(499, 501);
-	sheet.setColumnWidth(4, 107);
+	sheet.setColumnWidth(10, 150);
 
-	//Fill data rows
-	for (item = 2; item <= 499; item++) {
-		sheet.setRowHeight(item, 33);
-		sheet
-			.getRange(item, 1)
-			.setValue(
-				'=IMAGE("http://services.runescape.com/m=itemdb_rs/obj_sprite.gif?id=" & B' +
-					item +
-					")"
-			);
-		sheet.getRange(item, 4).setNumberFormat("#,##0 gp");
-		sheet.getRange(item, 5).setNumberFormat("#,##0");
-		sheet.getRange(item, 2).setHorizontalAlignment("center");
-	}
+  sheet.getRange("D:D").setNumberFormat("#,##0 gp"); // Price
+  sheet.getRange("E:E").setNumberFormat("#,##0");    // Limit
+  sheet.getRange("F:F").setNumberFormat("#,##0");    // Volume
+  sheet.getRange("G:G").setNumberFormat("#,##0");    // High Alch
 
 	//Set up triggers
-	for (batch = 1; batch <= 10; batch++) {
-		//Removes existing trigger
-		var triggers = ScriptApp.getProjectTriggers();
-		for (trigger = 0; trigger < triggers.length; trigger++) {
-			if (triggers[trigger].getHandlerFunction() == "updateRowsBatch" + batch) {
-				ScriptApp.deleteTrigger(triggers[trigger]);
-			}
-		}
+	var triggers = ScriptApp.getProjectTriggers();
 
-		//Creates triggers
-		ScriptApp.newTrigger("updateRowsBatch" + batch)
-			.timeBased()
-			.everyHours(2)
-			.create();
-	}
+  for (var i = 0; i < triggers.length; i++) {
+    if (
+      triggers[i].getHandlerFunction() ==
+      "updateAllPrices_"
+    ) {
+      ScriptApp.deleteTrigger(triggers[i]);
+    }
+  }
+
+  ScriptApp.newTrigger("updateAllPrices_")
+    .timeBased()
+    .everyHours(2)
+    .create();
 
 	var ui = SpreadsheetApp.getUi();
 	ui.alert(
@@ -244,52 +182,73 @@ function generatePriceUpdateSheet() {
 
 //Updates the item prices from row {from} to row {to}.
 function updatePricesForRange_(from, to) {
+	var sheet =
+		SpreadsheetApp.getActiveSpreadsheet().getSheetByName(
+			priceSheetName
+		);
+
+	var dump = getItemDump_();
+
+	if (!dump) {
+		throw new Error("Unable to retrieve item dump.");
+	}
+
+	var now = new Date();
+
 	for (var row = from; row <= to; row++) {
-		var sheet =
-			SpreadsheetApp.getActiveSpreadsheet().getSheetByName(priceSheetName);
 		var itemID = sheet.getRange(row, 2).getValue();
-		var itemName = sheet.getRange(row, 3).getValue();
+    
 
 		if (itemID == "" || !isNumber_(itemID) || itemID < 0) {
 			continue;
 		}
 
-		Utilities.sleep(1000);
-		var priceAndVolume = getPriceAndVolume_(itemID);
+    sheet.getRange(row, 1).setFormula(
+      '=IMAGE("https://services.runescape.com/m=itemdb_rs/obj_sprite.gif?id=' +
+      itemID +
+      '")'
+    );
 
-		var now = new Date();
-
-		if (priceAndVolume != null) {
-			sheet.getRange(row, 4).setValue(priceAndVolume.price);
-			sheet.getRange(row, 5).setValue(priceAndVolume.volume);
-			sheet.getRange(row, 6).setValue(now);
-		}
-		sheet.getRange(row, 7).setValue(now);
-	}
-}
-
-// Attempts to get both price and volume of an item based on its item ID in a single request.
-// Returns the entire item object with 'price', 'volume', 'id', 'timestamp' properties. Returns null if an error occurs.
-function getPriceAndVolume_(id) {
-	try {
-		var api = "https://api.weirdgloop.org/exchange/history/rs/latest?id=";
-		var response = JSON.parse(UrlFetchApp.fetch(api + id));
-		var itemData = response[id];
+		var itemData = dump[itemID];
 
 		if (itemData) {
-			return itemData;
-		}
-	} catch (err) {
-		// Return null if request fails
-	}
+			sheet.getRange(row, 3).setValue(itemData.name || "");
+      sheet.getRange(row, 4).setValue(itemData.price || "");
+      sheet.getRange(row, 5).setValue(itemData.limit || "");
 
-	return null;
+      sheet.getRange(row, 6).setValue(
+        itemData.volume === undefined ? "" : itemData.volume
+      );
+
+      sheet.getRange(row, 7).setValue(
+        itemData.highalch === undefined ? "" : itemData.highalch
+      );
+
+      sheet.getRange(row, 8).setValue(itemData.members);
+    }
+
+    if (dump["%JAGEX_TIMESTAMP%"]) {
+			sheet.getRange(row, 9).setValue(
+				new Date(dump["%JAGEX_TIMESTAMP%"] * 1000)
+			);
+		}
+
+		sheet.getRange(row, 10).setValue(now);
+	}
 }
 
-//Returns true if the input is a valid number. Returns false if the input is not a valid number.
+function getItemDump_() {
+	try {
+		return JSON.parse(
+			UrlFetchApp.fetch(dumpUrl).getContentText()
+		);
+	} catch (err) {
+		return null;
+	}
+}
+
 function isNumber_(input) {
-	if (parseInt(input).toFixed() == "NaN") return false;
-	return true;
+	return !isNaN(Number(input));
 }
 
 function getNewestVersionNumber_() {
@@ -297,7 +256,7 @@ function getNewestVersionNumber_() {
 		"https://raw.githubusercontent.com/JulioDuarteDev/RSAutoPriceUpdater/master/RSAutoPriceUpdater.gs";
 	var content = UrlFetchApp.fetch(url);
 	var lines = ("" + content).split("\n");
-	for (i = 0; i < lines.length; i++) {
+	for (var i = 0; i < lines.length; i++) {
 		if (
 			lines[i].indexOf("var version_ = ") != -1 &&
 			lines[i].indexOf("indexOf") == -1
