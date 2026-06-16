@@ -39,8 +39,8 @@ function showManualPrompt_() {
 	textTracking += "\n- Grand Exchange price";
 	textTracking += "\n- Buy limit";
 	textTracking += "\n- Trade volume";
-	textTracking += "\n- High Alchemy value (when available)";
-	textTracking += "\n- Members-only";
+	textTracking += "\n- High alchemy value (when available)";
+	textTracking += "\n- Members-only indicator";
 	textTracking += "\n- Last Grand Exchange update timestamp";
 	textTracking += "\n- Last attempted update timestamp";
 
@@ -108,7 +108,7 @@ function showAboutPrompt_() {
 			  ")");
 
 	var textCredits =
-		"This script was originally written by Zenyl (Reddit: /u/zenyl, RSN: Zenyl) and later modernized and expanded by Tristonho (RSN: Tristonho, LinkedIn: https://www.linkedin.com/in/julioduartedev/).";
+		"This script was originally written by Zenyl (Reddit: /u/zenyl, RSN: Zenyl) and later modernized and expanded by Tristonho";
 
 	var textData =
 		"Market data is sourced through the Weird Gloop RuneScape data project. Special thanks to Gaz (Gaz GEBot) and the contributors who maintain this resource for the RuneScape community.";
@@ -117,7 +117,7 @@ function showAboutPrompt_() {
 		"Disclaimer: We are not affiliated with Jagex in any way. This project is an independent community tool built using publicly available RuneScape data.";
 
 	var textGithub =
-		"GitHub repository: https://github.com/JulioDuarteDev/RSAutoPriceUpdater";
+		"Source code, issue reporting, and feature requests: https://github.com/JulioDuarteDev/RSAutoPriceUpdater";
 
 	var textLicense =
 		"License: GNU General Public License v3.0";
@@ -164,7 +164,7 @@ function generatePriceUpdateSheet() {
 		"Price",
     "Limit",
 		"Volume",
-    "High Alch",
+    "High alch",
     "Members only",
 		"Last GE update",
 		"Last attempted update",
