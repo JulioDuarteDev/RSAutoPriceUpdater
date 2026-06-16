@@ -267,4 +267,4 @@ function getNewestVersionNumber_() {
 	return "[Error retrieving version number from GitHub]";
 }
 
-var version_ = "2.0";
+var version_ = "3.0";
