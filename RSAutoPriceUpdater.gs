@@ -9,20 +9,51 @@ function onOpen() {
 		.addItem("Generate price sheet", "generatePriceUpdateSheet")
 		.addSeparator()
 		.addItem("Update price for row...", "showUpdateSpecificRowPrompt_")
-		.addSeparator()
-		.addItem("Update prices for row 2 - 49", "updateRowsBatch1")
-		.addItem("Update prices for row 50 - 99", "updateRowsBatch2")
-		.addItem("Update prices for row 100 - 149", "updateRowsBatch3")
-		.addItem("Update prices for row 150 - 199", "updateRowsBatch4")
-		.addItem("Update prices for row 200 - 249", "updateRowsBatch5")
-		.addItem("Update prices for row 250 - 299", "updateRowsBatch6")
-		.addItem("Update prices for row 300 - 349", "updateRowsBatch7")
-		.addItem("Update prices for row 350 - 399", "updateRowsBatch8")
-		.addItem("Update prices for row 400 - 449", "updateRowsBatch9")
-		.addItem("Update prices for row 450 - 499", "updateRowsBatch10")
+    .addItem("Update prices for range...", "showUpdateRangePrompt_")
 		.addSeparator()
 		.addItem("About", "showAboutPrompt_")
 		.addToUi();
+}
+
+function showUpdateRangePrompt_() {
+	var ui = SpreadsheetApp.getUi();
+
+	var result = ui.prompt(
+		"Update prices",
+		"Enter the row range (example: 2-49)",
+		ui.ButtonSet.OK_CANCEL
+	);
+
+	if (result.getSelectedButton() !== ui.Button.OK) {
+		return;
+	}
+
+	var text = result.getResponseText().trim();
+
+	var match = text.match(/^(\d+)\s*-\s*(\d+)$/);
+
+	if (!match) {
+		ui.alert(
+			"Invalid range. Use the format start-end (example: 2-49)."
+		);
+		return;
+	}
+
+	var from = parseInt(match[1], 10);
+	var to = parseInt(match[2], 10);
+
+	if (from < 2 || to < from) {
+		ui.alert("Invalid range.");
+		return;
+	}
+
+	updatePricesForRange_(from, to);
+
+	ui.alert(
+		"Update complete",
+		`Rows ${from} to ${to} have been updated.`,
+		ui.ButtonSet.OK
+	);
 }
 
 //Display prompt displayed when updating a specific row
@@ -209,38 +240,6 @@ function generatePriceUpdateSheet() {
 		"The script and auto-updaters have succesfully been set up. You can now start adding items, which will automatically be kept up to date.",
 		ui.ButtonSet.OK
 	);
-}
-
-//Trigger functions
-function updateRowsBatch1() {
-	updatePricesForRange_(2, 49);
-}
-function updateRowsBatch2() {
-	updatePricesForRange_(50, 99);
-}
-function updateRowsBatch3() {
-	updatePricesForRange_(100, 149);
-}
-function updateRowsBatch4() {
-	updatePricesForRange_(150, 199);
-}
-function updateRowsBatch5() {
-	updatePricesForRange_(200, 249);
-}
-function updateRowsBatch6() {
-	updatePricesForRange_(250, 299);
-}
-function updateRowsBatch7() {
-	updatePricesForRange_(300, 349);
-}
-function updateRowsBatch8() {
-	updatePricesForRange_(350, 399);
-}
-function updateRowsBatch9() {
-	updatePricesForRange_(400, 449);
-}
-function updateRowsBatch10() {
-	updatePricesForRange_(450, 499);
 }
 
 //Updates the item prices from row {from} to row {to}.
