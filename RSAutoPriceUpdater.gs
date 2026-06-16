@@ -26,45 +26,71 @@ function updateAllPrices_() {
 
 function showManualPrompt_() {
 	var textDescription =
-		"This script will generate a sheet which will automatically keep item prices up to date. Click the 'Generate price sheet' button in the RuneScape Price Updater dropdown menu to get started.";
+		"This script creates a spreadsheet that automatically keeps RuneScape Grand Exchange item data up to date.";
 	textDescription +=
-		"\nThen, simply add the names and IDs of the items you wish to track to the " +
+		"\n\nTo get started, click 'Generate price sheet' from the 'RuneScape Price Updater' menu. A new sheet named '" +
 		priceSheetName +
-		" sheet, and the script will handle the rest.";
+		"' will be created.";
+
+	var textTracking =
+		"To track an item, simply enter its Item ID in the 'Item ID' column. The script will automatically retrieve and update:";
+	textTracking += "\n- Item icon";
+	textTracking += "\n- Item name";
+	textTracking += "\n- Grand Exchange price";
+	textTracking += "\n- Buy limit";
+	textTracking += "\n- Trade volume";
+	textTracking += "\n- High Alchemy value (when available)";
+	textTracking += "\n- Members-only";
+	textTracking += "\n- Last Grand Exchange update timestamp";
+	textTracking += "\n- Last attempted update timestamp";
+
+	var textUpdating =
+		"Prices can be updated manually at any time by selecting 'Update prices' from the menu.";
+	textUpdating +=
+		"\nThe spreadsheet is also configured to refresh automatically every two hours.";
 
 	var textHowToRefer =
-		"To get the price of an item into another sheet, simply set the text of the cell you want to fill with '=" +
-		priceSheetName +
-		"!D2'.";
+		"To use an item's price in another sheet, reference the corresponding cell in the Price column.";
 	textHowToRefer +=
-		" Replace the number 2 to reflect the row that corresponds to the item of interest.";
+		"\nFor example: =" +
+		priceSheetName +
+		"!D2";
+	textHowToRefer +=
+		"\nReplace '2' with the row number of the item you want to reference.";
 
-	var textItemID = "To get the ID of an item:";
-	textItemID += "\n- Go to the RuneScape homepage (www.runescape.com)";
-	textItemID += "\n- Go to the Grand Exchange part of the website";
+	var textItemID = "How to find an Item ID:";
+	textItemID += "\n- Visit the RuneScape Grand Exchange website";
+	textItemID += "\n- Search for the item";
+	textItemID += "\n- Open the item's page";
+	textItemID += "\n- The Item ID is the number at the end of the URL";
 	textItemID +=
-		"\n- Search for the item you're interested in, and go to that items' page";
-	textItemID += "\n- The item's ID will be the last part of the URL";
-	textItemID +=
-		"\n- For example, the Cabbage URL is 'http://services.runescape.com/m=itemdb_rs/Cabbage/viewitem?obj=1965', so the ID for Cabbage is 1965.";
+		"\n- Example: https://services.runescape.com/m=itemdb_rs/Cabbage/viewitem?obj=1965";
+	textItemID += "\n- The Item ID for Cabbage is 1965";
 
-	var textOutdated =
-		"Important: Sometimes, items will not update. This is normal, and is caused by Jagex's API being unreliable. In the worst case, some item prices might be a few hours outdated.";
-	textOutdated +=
-		"\nIf you're first setting this up, give it about a day to ensure all items are updated, or manually insert the prices into the sheet.";
-	textOutdated +=
-		"\nThe 'Last succesful update' and 'Last attempted update' columns can give you an idea of how outdated an item's price is.";
+	var textNotes = "Notes:";
+	textNotes +=
+		"\n- Market data is sourced from the RuneScape Grand Exchange and may not update instantly";
+	textNotes +=
+		"\n- 'Last GE update' indicates when the market data was last updated";
+	textNotes +=
+		"\n- 'Last attempted update' indicates when this spreadsheet last refreshed the item data";
+	textNotes +=
+		"\n- Some items may not have a High Alchemy value available";
 
 	var ui = SpreadsheetApp.getUi();
 	ui.alert(
 		"RuneScape Price Updater - Manual",
 		textDescription +
 			"\n\n" +
+			textTracking +
+			"\n\n" +
+			textUpdating +
+			"\n\n" +
 			textHowToRefer +
 			"\n\n" +
 			textItemID +
 			"\n\n" +
-			textOutdated,
+			textNotes,
 		ui.ButtonSet.OK
 	);
 }
