@@ -1,5 +1,6 @@
 # RSAutoPriceUpdater
 🇺🇸 English | [🇧🇷 Português](README.pt-BR.md)
+
 Automatically track RuneScape Grand Exchange item data directly in Google Sheets.
 
 RSAutoPriceUpdater creates a spreadsheet that keeps RuneScape item information up to date, including prices, trade volumes, buy limits, high alchemy values, and members-only item information.
